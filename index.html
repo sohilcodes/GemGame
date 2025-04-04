@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gem Mining Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(to bottom, #222, #444);
+      color: #fff;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+    }
+
+    #gem {
+      width: 100px;
+      margin: 20px auto;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    #gem:active {
+      transform: scale(1.1);
+    }
+
+    #score {
+      font-size: 1.8em;
+      margin: 20px 0;
+    }
+
+    .button-container {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    .mine-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .mine-btn:hover {
+      background-color: #218838;
+    }
+
+    .refer-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .refer-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .withdraw-btn {
+      background-color: orange;
+      color: white;
+    }
+
+    .withdraw-btn:hover {
+      background-color: darkorange;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 15px;
+      font-size: 1em;
+      width: 250px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gem Mining Game</h1>
+  <img id="gem" src="https://i.imgur.com/MJ4pAwh.png" alt="Gem" />
+  <div id="score">Gems Mined: 0</div>
+
+  <div class="button-container">
+    <button class="mine-btn" onclick="mineGem()">Mine Gem</button>
+    <button class="refer-btn" onclick="referFriend()">Refer</button>
+  </div>
+
+  <!-- Referral Box -->
+  <div id="referralBox" style="display:none; margin-top: 20px;">
+    <input type="text" id="referralLink" readonly style="width: 300px; padding: 10px;" />
+    <br />
+    <button onclick="copyReferralLink()">Copy Link</button>
+  </div>
+
+  <h2>Withdraw Gems</h2>
+  <p>Minimum: 50,000 | Maximum: 50,000,000 gems</p>
+  <input type="number" id="withdrawAmount" placeholder="How many gems to withdraw" /><br />
+  <input type="text" id="upiId" placeholder="Enter your UPI ID" /><br />
+  <button class="withdraw-btn" onclick="withdraw()">Withdraw</button>
+
+  <script>
+    let score = 0;
+    const referralId = generateReferralId();
+
+    function generateReferralId() {
+      return 'user' + Math.floor(Math.random() * 1000000);
+    }
+
+    function mineGem() {
+      score++;
+      document.getElementById('score').textContent = `Gems Mined: ${score}`;
+    }
+
+    function referFriend() {
+      const link = `https://yourgame.com/?ref=${referralId}`;
+      const referralInput = document.getElementById("referralLink");
+      referralInput.value = link;
+      document.getElementById("referralBox").style.display = "block";
+    }
+
+    function copyReferralLink() {
+      const referralInput = document.getElementById("referralLink");
+      referralInput.select();
+      referralInput.setSelectionRange(0, 99999); // For mobile devices
+      document.execCommand("copy");
+      alert("Referral link copied to clipboard!");
+    }
+
+    function withdraw() {
+      const upiId = document.getElementById("upiId").value.trim();
+      const withdrawAmount = parseInt(document.getElementById("withdrawAmount").value);
+
+      if (isNaN(withdrawAmount) || withdrawAmount < 50000 || withdrawAmount > 50000000) {
+        alert("Enter a valid withdrawal amount between 50,000 and 50,000,000 gems.");
+        return;
+      }
+
+      if (withdrawAmount > score) {
+        alert(`You only have ${score} gems! Please mine more.`);
+        return;
+      }
+
+      if (!upiId || !upiId.includes("@")) {
+        alert("Please enter a valid UPI ID.");
+        return;
+      }
+
+      alert("Withdraw request sent!");
+
+      const message = `New Withdraw Request:\nGems: ${withdrawAmount}\nUPI ID: ${upiId}`;
+      const botToken = 'YOUR_BOT_TOKEN'; // Replace with your Telegram bot token
+      const chatId = 'YOUR_CHAT_ID';     // Replace with your Telegram chat ID
+
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message
+        })
+      }).then(response => {
+        if (!response.ok) {
+          console.error('Telegram API error');
+        } else {
+          score -= withdrawAmount;
+          document.getElementById('score').textContent = `Gems Mined: ${score}`;
+        }
+      }).catch(error => {
+        console.error('Network error:', error);
+      });
+    }
+  </script>
+</body>
+</html>
